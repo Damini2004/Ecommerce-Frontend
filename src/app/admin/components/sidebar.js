@@ -7,12 +7,14 @@ const Sidebar = () => {
   const pathname = usePathname();
   const router = useRouter();
 
-  const menuItems = [
-    { name: "Dashboard", icon: LayoutDashboard, path: "/admin/dashboard" },
-    { name: "Users", icon: Users, path: "/admin/users" },
-    { name: "Sales", icon: ShoppingCart, path: "/admin/sales" },
-    { name: "Settings", icon: Settings, path: "/admin/settings" },
-  ];
+const menuItems = [
+  { name: "Dashboard", icon: LayoutDashboard, path: "/admin/dashboard" },
+  { name: "Users", icon: Users, path: "/admin/users" },
+  { name: "Sales", icon: ShoppingCart, path: "/admin/sales" },
+  { name: "Settings", icon: Settings, path: "/admin/settings" },
+  { name: "KYC Management", icon: Users, path: "/admin/kyc" }, // ✅ new link
+];
+
 
 const handleLogout = () => {
   localStorage.removeItem("token");
