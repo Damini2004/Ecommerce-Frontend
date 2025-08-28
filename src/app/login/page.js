@@ -1,187 +1,108 @@
-"use client";
-
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { Eye, EyeOff, Loader2 } from "lucide-react"; 
-import api from "@/utils/api";
+'use client'
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import api from '../../utils/api';
 
 export default function LoginPage() {
+  const [formData, setFormData] = useState({
+    username: '',
+    password: '',
+    role: 'seller',
+  });
+  const [error, setError] = useState('');
   const router = useRouter();
-  const [formData, setFormData] = useState({ email: "", password: "" });
-  const [message, setMessage] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-
-  useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("user") || "null");
-    if (user?.role) {
-      redirectToRole(user.role);
-    }
-  }, []);
-
-  const redirectToRole = (role) => {
-    switch (role) {
-      case "superadmin":
-        router.push("/superadmin-dashboard");
-        break;
-      case "admin":
-        router.push("/admin/dashboard");
-        break;
-      case "seller":
-        router.push("/seller/dashboard");
-        break;
-      case "user":
-        router.push("/user/dashboard");
-        break;
-      default:
-        router.push("/dashboard");
-    }
-  };
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    setMessage("");
-    setLoading(true);
+    setError(''); // Clear previous errors
 
     try {
-      const res = await api.post("/gnet/auth/login", formData);
-      localStorage.setItem("token", res.data.accessToken);
-      localStorage.setItem("refreshToken", res.data.refreshToken);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
-      setMessage("✅ Login successful!");
-      redirectToRole(res.data.user.role);
+      const response = await api.post('/login', formData);
+
+      if (response.data.token) {
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('role', response.data.role); // Store the user's role
+
+        // Redirect based on role
+        if (response.data.role === 'seller') {
+          router.push('/seller/dashboard');
+        } else if (response.data.role === 'admin') {
+          router.push('/admin/dashboard');
+        } else if (response.data.role === 'superadmin') {
+          router.push('/superadmin-dashboard');
+        }
+      } else {
+        setError('Login failed. Please check your credentials.');
+      }
     } catch (err) {
-      setMessage(err.response?.data?.message || "❌ Login failed!");
-    } finally {
-      setLoading(false);
+      setError(err.response?.data?.message || 'An error occurred during login.');
+      console.error('Login error:', err);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col">
-   {/* ✅ Navbar */}
-<nav className="sticky top-0 z-50 w-full bg-white border-b border-gray-200 shadow-sm px-6 py-4 flex items-center justify-between">
-  {/* Logo */}
-  <div className="flex items-center gap-2">
-    <img src="/logo.png" alt="Logo" className="h-9" />
-  </div>
-
-  {/* Right Side */}
-  <div className="flex items-center gap-4">
- 
-
-    {/* Seller Button */}
-    <button
-      onClick={() => router.push("/seller/register")}
-      className="px-4 py-2 rounded-md font-semibold text-yellow-600 border border-yellow-500 hover:bg-yellow-50 transition"
-    >
-      🚀 Become a Seller
-    </button>
-  </div>
-</nav>
-
-
-      {/* ✅ Login Card */}
-      <div className="flex-grow flex items-center justify-center px-4">
-        <div className="w-full max-w-md p-6 bg-white rounded-md shadow-md border border-gray-300">
-          {/* Logo inside card (optional, can remove since navbar has logo) */}
-          <div className="flex justify-center mb-6">
-            <img
-              src="/logo.png"
-              alt="Logo"
-              className="h-12 object-contain"
-            />
-          </div>
-
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <h2 className="text-2xl font-semibold text-gray-900 text-center">
-              Sign in
-            </h2>
-            <p className="text-sm text-gray-700 text-center">
-              Sign in to your account
-            </p>
-
-            {/* Email */}
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600">
+      <div className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md transform transition-all duration-500 ease-in-out hover:scale-105">
+        <h1 className="text-4xl font-extrabold text-center text-gray-800 mb-8">Welcome Back!</h1>
+        <form onSubmit={handleLogin} className="space-y-6">
+          <div>
+            <label className="block text-gray-700 text-sm font-semibold mb-2" htmlFor="username">
+              Username
+            </label>
             <input
-              type="email"
-              name="email"
-              placeholder="Email or mobile number"
-              value={formData.email}
+              type="text"
+              id="username"
+              name="username"
+              value={formData.username}
               onChange={handleChange}
-              className="w-full text-black placeholder-black p-3 border border-gray-400 rounded-md focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300 ease-in-out"
               required
             />
-
-            {/* Password */}
-            <div className="relative">
-              <input
-                type={showPassword ? "text" : "password"}
-                name="password"
-                placeholder="Password"
-                value={formData.password}
-                onChange={handleChange}
-                className="w-full text-black placeholder-black p-3 border border-gray-400 rounded-md focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 pr-10"
-                required
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-900"
-              >
-                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-              </button>
-            </div>
-
-            {/* Login Button */}
-            <button
-              type="submit"
-              disabled={loading}
-              className={`w-full py-3 rounded-md font-semibold text-white transition ${
-                loading
-                  ? "bg-yellow-300 cursor-not-allowed"
-                  : "bg-yellow-500 hover:bg-yellow-600"
-              }`}
+          </div>
+          <div>
+            <label className="block text-gray-700 text-sm font-semibold mb-2" htmlFor="password">
+              Password
+            </label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300 ease-in-out"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-gray-700 text-sm font-semibold mb-2" htmlFor="role">
+              Role
+            </label>
+            <select
+              id="role"
+              name="role"
+              value={formData.role}
+              onChange={handleChange}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300 ease-in-out"
             >
-              {loading ? (
-                <Loader2
-                  className="animate-spin inline-block mr-2"
-                  size={18}
-                />
-              ) : null}
-              {loading ? "Signing in..." : "Sign in"}
-            </button>
-
-            {/* Message */}
-            {message && (
-              <p
-                className={`text-sm text-center ${
-                  message.includes("✅") ? "text-green-600" : "text-red-600"
-                }`}
-              >
-                {message}
-              </p>
-            )}
-
-            {/* Additional Links */}
-            <div className="text-center mt-2">
-              <a href="#" className="text-blue-600 hover:underline text-sm">
-                Forgot your password?
-              </a>
-            </div>
-            <div className="text-center mt-4 border-t pt-4">
-              <p className="text-sm text-gray-700">
-                New to our platform?{" "}
-                <a href="/register" className="text-blue-600 hover:underline">
-                  Create your account
-                </a>
-              </p>
-            </div>
-          </form>
+              <option value="seller">Seller</option>
+              <option value="admin">Admin</option>
+              <option value="superadmin">Super Admin</option>
+            </select>
+          </div>
+          {error && <p className="text-red-600 text-sm text-center">{error}</p>}
+          <button
+            type="submit"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition duration-300 ease-in-out transform hover:-translate-y-1"
+          >
+            Login
+          </button>
+        </form>
+        <div className="text-center mt-6">
+          <p className="text-gray-600 text-sm">Don't have an account? <a href="/register" className="text-blue-600 hover:underline font-semibold">Register Here</a></p>
         </div>
       </div>
     </div>
