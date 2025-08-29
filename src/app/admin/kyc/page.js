@@ -30,7 +30,7 @@ export default function KYCManagementPage() {
       const res = await api.get("/gnet/kyc/pendingkyc", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      const data = Array.isArray(res.data) ? res.data : res.data?.kyc || [];
+      const data = Array.isArray(res.data) ? res.data : res.data?.kycs || [];
       setPendingKYC(data);
     } catch (err) {
       console.error(err);
@@ -48,7 +48,7 @@ export default function KYCManagementPage() {
       const res = await api.get("/gnet/kyc/verifiedkyc", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      const data = Array.isArray(res.data) ? res.data : res.data?.kyc || [];
+      const data = Array.isArray(res.data) ? res.data : res.data?.kycs || [];
       setVerifiedKYC(data);
     } catch (err) {
       console.error(err);
@@ -72,15 +72,8 @@ export default function KYCManagementPage() {
         : res.data?.sellers
         ? res.data.sellers
         : [];
-        console.log(data);
-      setAllSellers(
-        data.map((seller) => ({
-          _id: seller._id,
-          firstname: seller.firstname || seller.name || "",
-          lastname: seller.lastname || "",
-          email: seller.email || "",
-        }))
-      );
+        console.log(res.data);
+      setAllSellers();
     } catch (err) {
       console.error(err);
       setError("Failed to fetch all sellers.");
@@ -121,8 +114,8 @@ export default function KYCManagementPage() {
                 className="hover:bg-gray-700 border-b border-gray-600"
               >
                 <td className="p-3">{seller._id}</td>
-                <td className="p-3">{seller.firstname} {seller.lastname}</td>
-                <td className="p-3">{seller.email}</td>
+                <td className="p-3">{seller.user.firstname} {seller.user.lastname}</td>
+                <td className="p-3">{seller.user.email}</td>
                 {type !== "all" && (
                   <td className="p-3">
                     <span
